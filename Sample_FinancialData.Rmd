@@ -1,0 +1,135 @@
+---
+title: "Quick and Dirty Intro to R Markdown"
+author: "Daniel Hanson"
+date: "5 February 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+# Just leave this in -- general knitr setting
+# from the stock example when creating an Rmd file.
+# include=FALSE tells R Markdown 
+# not to display this code in the document.
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Working with Financial Data
+
+Let's take a simple example of importing financial price data using quantmod, calculating the returns, and plotting the results.  Various points about R Markdown with be presented as we progress through the discussion.    
+
+## Some Initial Formatting Details First
+Note that in order to drop down on vertical space, we need to end this paragraph with two white spaces.  
+See how the text dropped down by one line?  But, what if we want more than one line?  For that, we need to end this paragraph with two white spaces, followed by another line with two whit spaces.  
+  
+Now, I've dropped down two lines, and started a new paragraph properly.  One more thing to note, though, is that R Markdown has no spell check.  In the end of the last sentence in the last paragraph, I should have put *white* instead of *whit*.  
+  
+You might also be asking, how did I put words in *italics*?  If you look at the Rmd file, you'll see the word is enclosed in two asterisks.  It is also possible to put the _text inside two underscore characters_; again, you'll need to look at the Rmd file.  
+  
+If you're after stronger emphasis, or just plain angry, you can **put in a bold font**.  This is accomplished by surrounding your text in double asterisks.  Likewise, __one can use double underscores__.  Finally, if you want both italics and bold, the way your instructor does it is with __*double underscores on the outside with single asterisks on the inside*__.  There exist other variations.  
+
+## Import Financial Data
+
+Let's bring in Amazon price data again, and check the head and the tail.  Note that we put `{r}` at the top to indicate we are embedding r code and wish to have the console results output into the pdf file.  The end of the code bloc is indicated by three back ticks, as shown in the Rmd file.
+
+```{r, echo=FALSE}
+# plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+library(quantmod)   
+
+# We can also put comments in the embedded R code
+# in the usual way with the hash marks.
+getSymbols("AMZN", from = "2010-12-31", to = "2013-12-31")
+head(AMZN)
+tail(AMZN)
+
+```
+  
+Note that we can get a lot of garbage output, especially if this is the first time the `library(quantmod)` command is called.  We can eliminate it as follows:  
+  
+```{r, results='hide'}
+rm(list = ls())   # unload quantmod so we can load it again
+library(quantmod)   
+
+# We can also put comments in the embedded R code
+# in the usual way with the hash marks.
+getSymbols("AMZN", from = "2010-12-31", to = "2013-12-31")
+
+```  
+  
+Then, run the `head` and `tail` commands without this parameter to display the results:  
+  
+```{r}
+head(AMZN)
+tail(AMZN)
+
+```
+   
+At this point, you might be wondering how we made R commands such as `head`, `tail`, and `library(quantmod)` appear in a font that looks like code.  The answer is to embed such text inside single back ticks, as shown in the Rmd file.    
+  
+## Plotting the Adjusted Prices
+In this case, we just put the plot command inside the code block, and let it rip:
+  
+```{r}
+# Downcast to zoo if you wish to use xlab and ylab:
+zoo.AMZN <- as.zoo(AMZN)
+plot(zoo.AMZN$AMZN.Adjusted, col = "darkblue", lwd = 2.0, xlab = "Date", 
+     ylab = "Adjusted Closing Price", main = "Amazon Adjusted Closing Prices")
+
+```
+  
+Now, what if we wanted to just embed the plot without the R code shown?  Use the parameter `echo = FALSE` parameter at the top of the code chunk to prevent printing of the R code that generated the plot:  
+  
+```{r, echo=FALSE}
+# Downcast to zoo if you wish to use xlab and ylab:
+zoo.AMZN <- as.zoo(AMZN)
+plot(zoo.AMZN$AMZN.Adjusted, col = "darkblue", lwd = 2.0, xlab = "Date", 
+     ylab = "Adjusted Closing Price", main = "Amazon Adjusted Closing Prices")
+
+```  
+  
+## Calculating and Plotting Returns
+To obtain log returns, we need to calculate $\log(S_{t}/S_{t-1})$ for each pair of adjacent equity prices.  
+
+### Mathematical Notation
+First, how did we display mathematical notation?  Also, how can we drop it down a line like this?
+$$\log(S_{t}/S_{t-1})$$
+You can see how this particular example was done by examining the Rmd file.  For a more detailed discussion on a wide variety of mathematical formulae, refer to this very nicely presented web page:  
+  
+https://www.calvin.edu/~rpruim/courses/s341/S17/from-class/MathinRmd.html
+  
+With more practice, you'll get used to it and be able to type them without having to look at the guide.  
+  
+### Calculate and Plot the Monthly Adjusted log Returns
+Now, just embed the R code from class, but let's again leave out the console output for the process:  
+  
+```{r, echo=FALSE}
+# Get the Adjusted monthly prices on the fly:
+amzn.monthlyAdj <- to.period(AMZN, period = "months")[, "AMZN.Adjusted"]
+
+# Calculate the log returns:
+amzn.ret <- diff(log(amzn.monthlyAdj), lag = 1)
+amzn.ret <- amzn.ret[-1]    # Remove resulting NA in the 1st position
+
+# Now, plot the returns:
+# Plot monthly returns:
+plot(amzn.ret, main = "Monthly Returns for AMZN",
+     col = "darkblue", major.ticks="years", yaxis.right = FALSE) 
+``` 
+  
+## Summary
+There is much more to learn about R Markdown, including subtleties such as sizing plots, embedding external imagine, inserting bullet points and numbering, using footnotes, etc, but these are things you should be able to pick up on your own, by creating more and more documents.  You should also find these online references helpful:   
+  
+https://rmarkdown.rstudio.com/articles_intro.html  
+  
+https://bookdown.org/yihui/rmarkdown/pdf-document.html  
+  
+https://rmarkdown.rstudio.com/authoring_quick_tour.html  
+  
+https://rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf
+  
+
+
